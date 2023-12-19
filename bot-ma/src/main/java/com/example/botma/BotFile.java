@@ -2,8 +2,8 @@ package com.example.botma;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -13,6 +13,9 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import com.example.botma.dto.VacancyDto;
+import com.example.botma.service.VacancyService;
+
 @Component
 public class BotFile extends TelegramLongPollingBot{
     
@@ -20,8 +23,9 @@ public class BotFile extends TelegramLongPollingBot{
         super(System.getenv("bot_key"));
     }
 
-    Vacancy vacancy = new Vacancy();
-    List<Vacancy> vacancies = vacancy.generateData();
+    @Autowired
+    VacancyService vacancyService;
+
     @Override
     public String getBotUsername() {
         return "lion777_ma_bot";
@@ -42,43 +46,32 @@ public class BotFile extends TelegramLongPollingBot{
     private void showVacancies(Update update) {
 
         String callBackData = update.getCallbackQuery().getData();
-        List<Vacancy> result = new ArrayList<>();
+        List<VacancyDto> result = new ArrayList<>();
 
         switch (callBackData) {
-            case "junior":
-                result = vacancies.stream()
-                .filter(item -> item.level.equals("junior"))
-                .collect(Collectors.toList());
-                handleVacancyMenu(result, update);
-                break;
-        
-            case "middle":
-                result = vacancies.stream()
-                .filter(item -> item.level.equals("middle"))
-                .collect(Collectors.toList());
-                handleVacancyMenu(result, update);
-                break;
 
             case "start":
                 handleStartMenuCommands(update);
                 break;
 
+            case "junior":
+                result = vacancyService.getVacancyByLvl(callBackData);
+                handleVacancyMenu(result, update);
+                break;
+        
+            case "middle":
+                result = vacancyService.getVacancyByLvl(callBackData);
+                handleVacancyMenu(result, update);
+                break;
+
             case "senior":
-                result = vacancies.stream()
-                .filter(item -> item.level.equals("senior"))
-                .collect(Collectors.toList());
+                result = vacancyService.getVacancyByLvl(callBackData);
                 handleVacancyMenu(result, update);
                 break;
 
             default: 
-                Vacancy resultVacancy = new Vacancy();
-                
-                for (Vacancy vacancy : vacancies) {
-                    if(vacancy.id.equals(callBackData)){
-                        resultVacancy = vacancy;
-                    }
-                }
-                handleVacancyDescription(resultVacancy, update);
+                VacancyDto vacancy = vacancyService.getVacancyById(callBackData);
+                handleVacancyDescription(vacancy, update);
                 break;
         }
     }
@@ -122,7 +115,7 @@ public class BotFile extends TelegramLongPollingBot{
         return keyboard;
     }
 
-    private void handleVacancyMenu(List<Vacancy> result, Update update){
+    private void handleVacancyMenu(List<VacancyDto> result, Update update){
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(update.getCallbackQuery().getMessage().getChatId());
         sendMessage.setText("Available vacancies is:");
@@ -134,12 +127,12 @@ public class BotFile extends TelegramLongPollingBot{
         }
     }
 
-    private ReplyKeyboard getVacancyMenu(List<Vacancy> result) {
+    private ReplyKeyboard getVacancyMenu(List<VacancyDto> result) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
-        for (Vacancy vacancy : result) {
+        for (VacancyDto vacancy : result) {
             InlineKeyboardButton button = new InlineKeyboardButton();
-            button.setText(vacancy.name);
-            button.setCallbackData(vacancy.id);
+            button.setText(vacancy.getName());
+            button.setCallbackData(vacancy.getId());
             buttons.add(button);
         }
         InlineKeyboardButton back = new InlineKeyboardButton();
@@ -152,10 +145,11 @@ public class BotFile extends TelegramLongPollingBot{
         return keyboard;
     }
 
-    private void handleVacancyDescription(Vacancy vacancy, Update update){
+    private void handleVacancyDescription(VacancyDto vacancy, Update update){
         SendMessage sendMessage = new SendMessage();
+        System.out.println(vacancy);
         sendMessage.setChatId(update.getCallbackQuery().getMessage().getChatId());
-        sendMessage.setText(vacancy.description + ". Vacancy ID is " + vacancy.id);
+        sendMessage.setText(vacancy.getDescription() + ". Vacancy ID is " + vacancy.getId());
         sendMessage.setReplyMarkup(getVacancyDescription(vacancy));
         try {
             execute(sendMessage);
@@ -164,19 +158,23 @@ public class BotFile extends TelegramLongPollingBot{
         }
     }
 
-    private InlineKeyboardMarkup getVacancyDescription(Vacancy vacancy) {
+    private InlineKeyboardMarkup getVacancyDescription(VacancyDto vacancy) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
 
         InlineKeyboardButton apply = new InlineKeyboardButton();
         apply.setText("Apply");
-        
-        apply.setCallbackData(vacancy.level);
+        apply.setCallbackData(vacancy.getLevel());
         buttons.add(apply);
 
         InlineKeyboardButton back = new InlineKeyboardButton();
-        back.setText("Back");
-        back.setCallbackData(vacancy.level);
+        back.setText("Back to vacancies");
+        back.setCallbackData(vacancy.getLevel());
         buttons.add(back);
+
+        InlineKeyboardButton start = new InlineKeyboardButton();
+        start.setText("To start");
+        start.setCallbackData("start");
+        buttons.add(start);
 
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
         keyboard.setKeyboard(List.of(buttons));
