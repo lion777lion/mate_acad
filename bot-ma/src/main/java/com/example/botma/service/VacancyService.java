@@ -1,5 +1,6 @@
 package com.example.botma.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.botma.dto.VacancyDto;
 import java.util.List;
@@ -10,30 +11,17 @@ import jakarta.annotation.PostConstruct;
 @Service
 public class VacancyService {
 
+    @Autowired
+    private VacancyReaderService vacancyReaderService;
+
     private final List<VacancyDto> vacancies = new ArrayList<>();
 
     @PostConstruct
     public void init() {
-        VacancyDto junior = new VacancyDto();
-        junior.setId("1");
-        junior.setLevel("junior");
-        junior.setName("Junior at Ma");
-        junior.setDescription("Junior developer at MA");
-        vacancies.add(junior);
-
-        VacancyDto middle = new VacancyDto();
-        middle.setId("2");
-        middle.setLevel("middle");
-        middle.setName("Middle at Ma");
-        middle.setDescription("Middle developer at MA");
-        vacancies.add(middle);
-
-        VacancyDto senior = new VacancyDto();
-        senior.setId("3");
-        senior.setLevel("senior");
-        senior.setName("Senior at Ma");
-        senior.setDescription("Senior developer at MA");
-        vacancies.add(senior);
+        List<VacancyDto> vacanciesFromFile = vacancyReaderService.getVacanciesFromFile("vacancies.csv");
+        for (VacancyDto vacancyDto : vacanciesFromFile) {
+            vacancies.add(vacancyDto);
+        }
     }
 
     public List<VacancyDto> getVacancyByLvl(String level) {
@@ -41,7 +29,7 @@ public class VacancyService {
         List<VacancyDto> sortedVacancy = new ArrayList<>();
         
         sortedVacancy = vacancies.stream()
-        .filter(item -> item.getLevel().equals(level))
+        .filter(item -> item.getName().toLowerCase().contains(level))
         .toList();
 
         return sortedVacancy;

@@ -1,11 +1,24 @@
 package com.example.botma.dto;
 
-public class VacancyDto {
+import com.opencsv.bean.CsvBindByName;
 
+public class VacancyDto {
+    //Id,Title,Short description,Long description,Company,Salary,Link
+    @CsvBindByName(column = "Id")
     private String id; 
+    @CsvBindByName(column = "Title")
     private String name;
     private String level;
+    @CsvBindByName(column = "Short description")
     private String description;
+    @CsvBindByName(column = "Long description")
+    private String fullDescription;
+    @CsvBindByName(column = "Company")
+    private String company;
+    @CsvBindByName(column = "Salary")
+    private String salary;
+    @CsvBindByName(column = "Link")
+    private String link;
 
     public VacancyDto() {}
 
@@ -42,13 +55,42 @@ public class VacancyDto {
         this.description = description;
     }
 
-    
-    
+    public String getFullDescription() {
+        return fullDescription;
+    }
 
-    
-    
-    @Override
-    public String toString(){
-        return name;
+
+    public void setFullDescription(String fullDescription) {
+        this.fullDescription = fullDescription;
+    }
+
+
+    public String getCompany() {
+        return company;
+    }
+
+
+    public void setCompany(String company) {
+        this.company = company;
+    }
+
+
+    public String getSalary() {
+        return salary;
+    }
+
+
+    public void setSalary(String salary) {
+        this.salary = salary;
+    }
+
+
+    public String getLink() {
+        return link;
+    }
+
+
+    public void setLink(String link) {
+        this.link = link;
     }
 }

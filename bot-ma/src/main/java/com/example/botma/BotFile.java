@@ -12,6 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import java.util.HashMap;
 
 import com.example.botma.dto.VacancyDto;
 import com.example.botma.service.VacancyService;
@@ -25,6 +26,8 @@ public class BotFile extends TelegramLongPollingBot{
 
     @Autowired
     VacancyService vacancyService;
+
+    private HashMap<Long, String> lastAction = new HashMap<>();
 
     @Override
     public String getBotUsername() {
@@ -116,8 +119,11 @@ public class BotFile extends TelegramLongPollingBot{
     }
 
     private void handleVacancyMenu(List<VacancyDto> result, Update update){
+        Long id = update.getCallbackQuery().getMessage().getChatId();
+        String level = update.getCallbackQuery().getData();
+        lastAction.put(id, level);
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(update.getCallbackQuery().getMessage().getChatId());
+        sendMessage.setChatId(id);
         sendMessage.setText("Available vacancies is:");
         sendMessage.setReplyMarkup(getVacancyMenu(result));
         try {
@@ -146,11 +152,11 @@ public class BotFile extends TelegramLongPollingBot{
     }
 
     private void handleVacancyDescription(VacancyDto vacancy, Update update){
+        Long id = update.getCallbackQuery().getMessage().getChatId();
         SendMessage sendMessage = new SendMessage();
-        System.out.println(vacancy);
-        sendMessage.setChatId(update.getCallbackQuery().getMessage().getChatId());
-        sendMessage.setText(vacancy.getDescription() + ". Vacancy ID is " + vacancy.getId());
-        sendMessage.setReplyMarkup(getVacancyDescription(vacancy));
+        sendMessage.setChatId(id);
+        sendMessage.setText(vacancy.getDescription());
+        sendMessage.setReplyMarkup(getVacancyDescription(vacancy, id));
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
@@ -158,17 +164,17 @@ public class BotFile extends TelegramLongPollingBot{
         }
     }
 
-    private InlineKeyboardMarkup getVacancyDescription(VacancyDto vacancy) {
+    private InlineKeyboardMarkup getVacancyDescription(VacancyDto vacancy, Long id) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
-
+        
         InlineKeyboardButton apply = new InlineKeyboardButton();
         apply.setText("Apply");
-        apply.setCallbackData(vacancy.getLevel());
+        apply.setUrl(vacancy.getLink());
         buttons.add(apply);
 
         InlineKeyboardButton back = new InlineKeyboardButton();
         back.setText("Back to vacancies");
-        back.setCallbackData(vacancy.getLevel());
+        back.setCallbackData(lastAction.get(id));
         buttons.add(back);
 
         InlineKeyboardButton start = new InlineKeyboardButton();
