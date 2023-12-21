@@ -44,4 +44,37 @@ public class VacancyService {
         }
         return resultVacancy;
     }
+
+    public String getVacancyView(String id) {
+        VacancyDto vacancy = getVacancyById(id);
+        String vacancyView = """
+                *Title:* %s
+                *Company:* %s
+                *Short description:* %s
+                *Full description* %s
+                *Salary* %s
+                """.formatted(escapeMarkdownReversedChars(vacancy.getName()), 
+                escapeMarkdownReversedChars(vacancy.getCompany()),
+                escapeMarkdownReversedChars(vacancy.getDescription()),
+                escapeMarkdownReversedChars(vacancy.getFullDescription()),
+                vacancy.getSalary().isBlank() ? "Not specified" : escapeMarkdownReversedChars(vacancy.getSalary()));
+        return vacancyView;
+    }
+
+    private String escapeMarkdownReversedChars(String text){
+        return text.replace("-", "\\-")
+        .replace("_", "\\_")
+        .replace("*", "\\*")
+        .replace("(", "\\(")
+        .replace(")", "\\)")
+        .replace("[", "\\[")
+        .replace("]", "\\]")
+        .replace("`", "\\`")
+        .replace("~", "\\~")
+        .replace("<", "\\>")
+        .replace("#", "\\#")
+        .replace("+", "\\+")
+        .replace(".", "\\.")
+        .replace("!", "\\!");
+    }
 }

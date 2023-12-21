@@ -2,6 +2,8 @@
     "java.compile.nullAnalysis.mode": "disabled",
     "java.configuration.updateBuildConfiguration": "automatic",
     "cSpell.words": [
-        "botma"
-    ]
+        "botma",
+        "MARKDOWNV"
+    ],
+    "maven.view": "flat"
 }

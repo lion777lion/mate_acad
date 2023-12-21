@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -73,8 +74,7 @@ public class BotFile extends TelegramLongPollingBot{
                 break;
 
             default: 
-                VacancyDto vacancy = vacancyService.getVacancyById(callBackData);
-                handleVacancyDescription(vacancy, update);
+                handleVacancyDescription(callBackData, update);
                 break;
         }
     }
@@ -151,12 +151,13 @@ public class BotFile extends TelegramLongPollingBot{
         return keyboard;
     }
 
-    private void handleVacancyDescription(VacancyDto vacancy, Update update){
-        Long id = update.getCallbackQuery().getMessage().getChatId();
+    private void handleVacancyDescription(String vacancyId, Update update){
+        Long userId = update.getCallbackQuery().getMessage().getChatId();
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(id);
-        sendMessage.setText(vacancy.getDescription());
-        sendMessage.setReplyMarkup(getVacancyDescription(vacancy, id));
+        sendMessage.setChatId(userId);
+        sendMessage.setText(vacancyService.getVacancyView(vacancyId));
+        sendMessage.setParseMode(ParseMode.MARKDOWNV2);
+        sendMessage.setReplyMarkup(getVacancyDescription(vacancyService.getVacancyById(vacancyId).getLink(), userId));
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
@@ -164,12 +165,12 @@ public class BotFile extends TelegramLongPollingBot{
         }
     }
 
-    private InlineKeyboardMarkup getVacancyDescription(VacancyDto vacancy, Long id) {
+    private InlineKeyboardMarkup getVacancyDescription(String link, Long id) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         
         InlineKeyboardButton apply = new InlineKeyboardButton();
         apply.setText("Apply");
-        apply.setUrl(vacancy.getLink());
+        apply.setUrl(link);
         buttons.add(apply);
 
         InlineKeyboardButton back = new InlineKeyboardButton();

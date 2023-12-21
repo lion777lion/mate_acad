@@ -8,7 +8,6 @@ public class VacancyDto {
     private String id; 
     @CsvBindByName(column = "Title")
     private String name;
-    private String level;
     @CsvBindByName(column = "Short description")
     private String description;
     @CsvBindByName(column = "Long description")
@@ -37,14 +36,6 @@ public class VacancyDto {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getLevel() {
-        return level;
-    }
-
-    public void setLevel(String level) {
-        this.level = level;
     }
 
     public String getDescription() {
